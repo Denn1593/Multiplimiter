@@ -18,12 +18,12 @@ public class CreateGraphics
         long size = waveData.length;
         int incrementer = 1;
         scale = 1;
-        while(size > Toolkit.getDefaultToolkit().getScreenSize().getWidth())
+        while(size / incrementer > Toolkit.getDefaultToolkit().getScreenSize().getWidth() - 40)
         {
-            size = size / 2;
-            incrementer = incrementer * 2;
-            scale = scale * 2;
+            incrementer = incrementer + 1;
+            scale = scale + 1;
         }
+        size = size / incrementer;
         WritableImage wi = new WritableImage((int) size, 200);
         PixelWriter pi = wi.getPixelWriter();
         int counter = 0;

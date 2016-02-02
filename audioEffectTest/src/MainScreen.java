@@ -1,12 +1,10 @@
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
@@ -32,7 +30,7 @@ public class MainScreen
     Button load = new Button("Load");
     Button save = new Button("Save");
     Button play = new Button("Play");
-    Button newSound = new Button("new");
+    Button newSound = new Button("New");
     Label label = new Label("file:");
     Label scale = new Label();
     Label showOffsetLabel = new Label("Show offset");
@@ -40,6 +38,7 @@ public class MainScreen
     ImageView waveFormView = new ImageView();
     ImageView logoView = new ImageView();
     ImageView logoGradient = new ImageView(CreateGraphics.createGradient(360, 210));
+    ImageView controlGradient = new ImageView();
     Slider multiplier = new Slider(1, 100, 1);
     Slider offsetSlider = new Slider(0, 2, 0);
     public MainScreen(Stage window)
@@ -64,14 +63,6 @@ public class MainScreen
         load.setPrefWidth(80);
         load.setLayoutX(260);
         load.setLayoutY(170);
-        PixelWriter pi = waveForm.getPixelWriter();
-        for(int x = 0; x < 10; x++)
-        {
-            for(int y = 0; y < 10; y++)
-            {
-                pi.setColor(x, y, Color.color(0, 1, 1));
-            }
-        }
         waveFormView.setImage(waveForm);
         pane.getChildren().addAll(logoGradient, logoView, fileName, load, label);
 
@@ -102,7 +93,7 @@ public class MainScreen
         });
 
         scene = new Scene(pane, 350, 200);
-        loadPane.getChildren().addAll(waveFormView, multiplier, multiLabel, offset, offsetSlider, saveFileName, save, bounceLabel, play, bounce, showOffset, showOffsetLabel, scale, newSound);
+        loadPane.getChildren().addAll(controlGradient, waveFormView, multiplier, multiLabel, offset, offsetSlider, saveFileName, save, bounceLabel, play, bounce, showOffset, showOffsetLabel, scale, newSound);
         audioScene = new Scene(loadPane, waveForm.getWidth() + 20, 326);
         window.setScene(scene);
     }
@@ -116,6 +107,8 @@ public class MainScreen
         waveFormView.setImage(waveForm);
         window.setTitle("Multiplimiter: "+fileName.getText());
         window.setWidth(waveForm.getWidth() + 26);
+        controlGradient.setLayoutY(120);
+        controlGradient.setImage(CreateGraphics.createGradient((int) waveForm.getWidth() + 26, 326));
         newSound.setLayoutX(waveForm.getWidth() - 40);
         newSound.setLayoutY(220);
         newSound.setPrefWidth(50);
@@ -143,7 +136,7 @@ public class MainScreen
         saveFileName.setLayoutX(waveForm.getWidth() - 320);
         saveFileName.setLayoutY(220);
         saveFileName.setPrefWidth(150);
-        scale.setLayoutX(waveForm.getWidth() - 395);
+        scale.setLayoutX(waveForm.getWidth() - 405);
         scale.setLayoutY(224);
         scale.setText("Scale: 1:"+CreateGraphics.getScale());
         save.setPrefWidth(50);

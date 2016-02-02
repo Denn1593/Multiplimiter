@@ -43,7 +43,7 @@ public class AudioLoader
 
     public static void saveAudioFile(double[] sound, String name) throws IOException
     {
-        AudioFormat format = new AudioFormat(44100, 16, 2, true, false);
+        AudioFormat format = new AudioFormat(44100 * 2, 16, 1, true, false);
         byte[] data = new byte[sound.length * 2];
         for(int i = 0; i < sound.length; i++)
         {
@@ -58,7 +58,7 @@ public class AudioLoader
 
     public static void playAudioFile(double[] sound) throws LineUnavailableException, IOException
     {
-        AudioFormat format = new AudioFormat(44100, 16, 2, true, false);
+        AudioFormat format = new AudioFormat(44100 * 2, 16, 1, true, false);
         byte[] data = new byte[sound.length * 2];
         for(int i = 0; i < sound.length; i++)
         {
