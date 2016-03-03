@@ -3,15 +3,16 @@ import java.io.*;
 
 public class AudioLoader
 {
+
     public static double[] loadAudioFile(File file)
     {
         byte[] data = readByte(file);
         int dataLength = data.length;
-        double[] result = new double[dataLength / 2];
+        double[] result = new double[dataLength / 4];
 
-        for(int i = 0; i < dataLength / 2; i++)
+        for(int i = 0; i < dataLength / 4; i++)
         {
-            result[i] = ((short) (((data[2*i+1] & 0xFF) << 8) + (data[2*i] & 0xFF))) / ((double) Short.MAX_VALUE);
+            result[i] = ((short) (((data[4*i+1] & 0xFF) << 8) + (data[4*i] & 0xFF))) / ((double) Short.MAX_VALUE);
         }
         return result;
     }
@@ -43,7 +44,7 @@ public class AudioLoader
 
     public static void saveAudioFile(double[] sound, String name) throws IOException
     {
-        AudioFormat format = new AudioFormat(44100 * 2, 16, 1, true, false);
+        AudioFormat format = new AudioFormat(44100, 16, 1, true, false);
         byte[] data = new byte[sound.length * 2];
         for(int i = 0; i < sound.length; i++)
         {
@@ -58,7 +59,7 @@ public class AudioLoader
 
     public static void playAudioFile(double[] sound) throws LineUnavailableException, IOException
     {
-        AudioFormat format = new AudioFormat(44100 * 2, 16, 1, true, false);
+        AudioFormat format = new AudioFormat(44100, 16, 1, true, false);
         byte[] data = new byte[sound.length * 2];
         for(int i = 0; i < sound.length; i++)
         {

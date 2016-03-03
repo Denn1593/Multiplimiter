@@ -16,18 +16,16 @@ public class CreateGraphics
     public static WritableImage generateWaveForm(double[] waveData, double offset, boolean showOffset)
     {
         long size = waveData.length;
-        int incrementer = 1;
         scale = 1;
-        while(size / incrementer > Toolkit.getDefaultToolkit().getScreenSize().getWidth() - 40)
+        while(size / scale > Toolkit.getDefaultToolkit().getScreenSize().getWidth() - 40)
         {
-            incrementer = incrementer + 1;
             scale = scale + 1;
         }
-        size = size / incrementer;
+        size = size / scale;
         WritableImage wi = new WritableImage((int) size, 200);
         PixelWriter pi = wi.getPixelWriter();
         int counter = 0;
-        for(int i = 0; counter < size; i = i + incrementer)
+        for(int i = 0; counter < size; i = i + scale)
         {
             if(waveData[i] > 0)
             {

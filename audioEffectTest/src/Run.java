@@ -11,6 +11,5 @@ public class Run extends Application
     {
         MainScreen mainScreen = new MainScreen(window);
         window.show();
-        System.out.println(Short.MAX_VALUE);
     }
 }

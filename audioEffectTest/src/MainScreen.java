@@ -1,3 +1,4 @@
+import javafx.collections.FXCollections;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
@@ -9,7 +10,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
 public class MainScreen
@@ -22,8 +26,9 @@ public class MainScreen
     Pane pane = new Pane();
     Pane loadPane = new Pane();
     TextField fileName = new TextField();
-    TextField multiLabel = new TextField("1");
-    TextField offset = new TextField("0");
+    TextField multiLabel = new TextField("1.0");
+    TextField offset = new TextField("0.0");
+    TextField crush = new TextField("0");
     TextField saveFileName = new TextField();
     CheckBox bounce = new CheckBox();
     CheckBox showOffset = new CheckBox();
@@ -34,13 +39,15 @@ public class MainScreen
     Label label = new Label("file:");
     Label scale = new Label();
     Label showOffsetLabel = new Label("Show offset");
-    Label bounceLabel = new Label("Bounce when exceeding limits");
+    Label bounceLabel = new Label("Ping-pong");
     ImageView waveFormView = new ImageView();
     ImageView logoView = new ImageView();
     ImageView logoGradient = new ImageView(CreateGraphics.createGradient(360, 210));
     ImageView controlGradient = new ImageView();
     Slider multiplier = new Slider(1, 100, 1);
     Slider offsetSlider = new Slider(0, 2, 0);
+    Slider crushSlider = new Slider(0, 1000, 0);
+    ListView<String> suggest = new ListView<>();
     public MainScreen(Stage window)
     {
         this.window = window;
@@ -53,6 +60,7 @@ public class MainScreen
         showOffset.selectedProperty().addListener(e-> changeValue());
         offsetSlider.valueProperty().addListener(e-> changeValue());
         multiplier.valueProperty().addListener(e-> changeValue());
+        crushSlider.valueProperty().addListener(e-> changeValue());
         label.setLayoutX(10);
         label.setLayoutY(173);
         label.setFont(Font.font(Font.getDefault().toString(), FontWeight.BOLD, 14D));
@@ -64,7 +72,28 @@ public class MainScreen
         load.setLayoutX(260);
         load.setLayoutY(170);
         waveFormView.setImage(waveForm);
-        pane.getChildren().addAll(logoGradient, logoView, fileName, load, label);
+        suggest.setLayoutX(50);
+        suggest.setLayoutY(170);
+        suggest.setPrefWidth(200);
+        suggest.setPrefHeight(0);
+        suggest.setOnMouseClicked(e->
+        {
+            String name = "";
+            for(int j = 4; j < suggest.getSelectionModel().getSelectedItem().length(); j++)
+            {
+                name = name + suggest.getSelectionModel().getSelectedItem().charAt(j);
+            }
+            fileName.setText(name);
+            try
+            {
+                showSound();
+            }
+            catch (NullPointerException ex)
+            {
+                window.setTitle("Multiplimiter: load sound (loading failed!)");
+            }
+        });
+        pane.getChildren().addAll(logoGradient, logoView, suggest, fileName, load, label);
 
         load.setOnAction(e ->
         {
@@ -79,6 +108,7 @@ public class MainScreen
         });
         fileName.setOnKeyPressed(e ->
         {
+            scanForFile(e);
             if(e.getCode().equals(KeyCode.ENTER))
             {
                 try
@@ -93,9 +123,10 @@ public class MainScreen
         });
 
         scene = new Scene(pane, 350, 200);
-        loadPane.getChildren().addAll(controlGradient, waveFormView, multiplier, multiLabel, offset, offsetSlider, saveFileName, save, bounceLabel, play, bounce, showOffset, showOffsetLabel, scale, newSound);
-        audioScene = new Scene(loadPane, waveForm.getWidth() + 20, 326);
+        loadPane.getChildren().addAll(controlGradient, waveFormView, multiplier, multiLabel, offset, offsetSlider, saveFileName, save, bounceLabel, play, bounce, showOffset, showOffsetLabel, scale, newSound, crush, crushSlider);
+        audioScene = new Scene(loadPane, waveForm.getWidth() + 20, 366);
         window.setScene(scene);
+        fileName.requestFocus();
     }
 
     public void showSound()
@@ -103,6 +134,7 @@ public class MainScreen
         bounce.setSelected(false);
         offsetSlider.setValue(0);
         multiplier.setValue(1);
+        crushSlider.setValue(0);
         waveForm = Processor.loadFile(fileName.getText(), offsetSlider.getValue(), showOffset.isSelected());
         waveFormView.setImage(waveForm);
         window.setTitle("Multiplimiter: "+fileName.getText());
@@ -136,6 +168,22 @@ public class MainScreen
         saveFileName.setLayoutX(waveForm.getWidth() - 320);
         saveFileName.setLayoutY(220);
         saveFileName.setPrefWidth(150);
+        saveFileName.setOnKeyPressed(e->
+        {
+            if(e.getCode() == KeyCode.ENTER)
+            {
+                try
+                {
+                    Calendar now = Calendar.getInstance();
+                    AudioLoader.saveAudioFile(Processor.sound, saveFileName.getText());
+                    window.setTitle("Multiplimiter: "+fileName.getText()+ " (\""+saveFileName.getText()+".wav\" save successful "+now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+")");
+                }
+                catch (IOException ioe)
+                {
+                    window.setTitle("Multiplimiter: "+fileName.getText()+ " (saving failed!)");
+                }
+            }
+        });
         scale.setLayoutX(waveForm.getWidth() - 405);
         scale.setLayoutY(224);
         scale.setText("Scale: 1:"+CreateGraphics.getScale());
@@ -159,9 +207,9 @@ public class MainScreen
         bounceLabel.setLayoutY(224);
         bounce.setLayoutX(10);
         bounce.setLayoutY(223);
-        showOffset.setLayoutX(300);
+        showOffset.setLayoutX(110);
         showOffset.setLayoutY(223);
-        showOffsetLabel.setLayoutX(325);
+        showOffsetLabel.setLayoutX(135);
         showOffsetLabel.setLayoutY(224);
         waveFormView.setLayoutX(10);
         waveFormView.setLayoutY(10);
@@ -169,6 +217,10 @@ public class MainScreen
         multiLabel.setLayoutY(250);
         multiLabel.setPrefWidth(100);
         multiLabel.setOnKeyPressed(this::changeSlider);
+        crush.setLayoutX(10);
+        crush.setLayoutY(330);
+        crush.setPrefWidth(100);
+        crush.setOnKeyPressed(this::changeSlider);
         offset.setLayoutX(10);
         offset.setLayoutY(290);
         offset.setPrefWidth(100);
@@ -179,24 +231,130 @@ public class MainScreen
         multiplier.setLayoutX(120);
         multiplier.setLayoutY(255);
         multiplier.setPrefWidth(waveForm.getWidth() - 110);
+        crushSlider.setLayoutX(120);
+        crushSlider.setLayoutY(335);
+        crushSlider.setPrefWidth(waveForm.getWidth() - 110);
         window.setScene(audioScene);
+        audioScene.setOnKeyPressed(e->
+        {
+            if(e.isControlDown())
+            {
+                if(e.getCode() == KeyCode.N)
+                {
+                    window.setScene(scene);
+                    window.setWidth(356);
+                    window.setTitle("Multiplimiter: load sound");
+                }
+                if(e.getCode() == KeyCode.S)
+                {
+                    try
+                    {
+                        Calendar now = Calendar.getInstance();
+                        AudioLoader.saveAudioFile(Processor.sound, saveFileName.getText());
+                        window.setTitle("Multiplimiter: "+fileName.getText()+ " (\""+saveFileName.getText()+".wav\" save successful "+now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+")");
+                    }
+                    catch (IOException ioe)
+                    {
+                        window.setTitle("Multiplimiter: "+fileName.getText()+ " (saving failed!)");
+                    }
+                }
+            }
+        });
     }
 
     public void changeValue()
     {
         multiLabel.setText(""+multiplier.getValue());
         offset.setText(""+offsetSlider.getValue());
-        waveForm = Processor.processWave(multiplier.getValue(), offsetSlider.getValue(), bounce.isSelected(), showOffset.isSelected());
+        crush.setText(""+ (int) crushSlider.getValue());
+        waveForm = Processor.processWave(multiplier.getValue(), offsetSlider.getValue(), bounce.isSelected(), showOffset.isSelected(), (int) crushSlider.getValue());
         waveFormView.setImage(waveForm);
     }
     public void changeSlider(KeyEvent ke)
     {
         if(ke.getCode().equals(KeyCode.ENTER))
         {
-            multiplier.setValue(Double.parseDouble(multiLabel.getText()));
-            offsetSlider.setValue(Double.parseDouble((offset.getText())));
-            waveForm = Processor.processWave(multiplier.getValue(), offsetSlider.getValue(), bounce.isSelected(), showOffset.isSelected());
+            try
+            {
+                multiplier.setValue(Double.parseDouble(multiLabel.getText()));
+            }
+            catch(NumberFormatException e)
+            {
+                multiLabel.setText("Not a number");
+            }
+            try
+            {
+                offsetSlider.setValue(Double.parseDouble((offset.getText())));
+            }
+            catch(NumberFormatException e)
+            {
+                offset.setText("Not a number");
+            }
+            try
+            {
+                crushSlider.setValue((int) Double.parseDouble(crush.getText()));
+            }
+            catch(NumberFormatException e)
+            {
+                crush.setText("Not a number");
+            }
+            waveForm = Processor.processWave(multiplier.getValue(), offsetSlider.getValue(), bounce.isSelected(), showOffset.isSelected(), (int) crushSlider.getValue());
             waveFormView.setImage(waveForm);
+        }
+    }
+
+    public void scanForFile(KeyEvent e)
+    {
+        String s = fileName.getText();
+
+
+        if((e.getCode().isDigitKey() || e.getCode().isLetterKey()) && !e.isControlDown())
+        {
+            s = s + e.getText();
+        }
+        if(e.getCode() == KeyCode.BACK_SPACE)
+        {
+            String s2 = "";
+            for(int i = 0; i < s.length() - 1; i++)
+            {
+                s2 = s2 + s.charAt(i);
+            }
+            s = s2;
+        }
+        System.out.println(s);
+        if((s.length() > 0))
+        {
+            File f = new File(System.getProperty("user.dir"));
+            suggest.setItems(FXCollections.observableArrayList(Processor.sortSuggestions(new ArrayList<>(Arrays.asList(f.list())), s)));
+            suggest.setPrefHeight(150);
+            suggest.setLayoutY(20);
+        }
+        else
+        {
+            suggest.setLayoutY(300);
+            suggest.setPrefHeight(0);
+        }
+        window.setTitle("Multiplimiter: load sound");
+        if(e.isControlDown() && e.getCode().isDigitKey())
+        {
+            int i = Integer.parseInt(e.getText());
+            if(i != 0)
+            {
+                i = i-1;
+                String name = "";
+                for(int j = 4; j < suggest.getItems().get(i).length(); j++)
+                {
+                    name = name + suggest.getItems().get(i).charAt(j);
+                }
+                fileName.setText(name);
+                try
+                {
+                    showSound();
+                } catch (NullPointerException ex)
+                {
+                    window.setTitle("Multiplimiter: load sound (loading failed!)");
+                }
+            }
         }
     }
 }
