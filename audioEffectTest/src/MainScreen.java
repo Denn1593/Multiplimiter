@@ -28,9 +28,8 @@ public class MainScreen
     TextField fileName = new TextField();
     TextField multiLabel = new TextField("1.0");
     TextField offset = new TextField("0.0");
-    TextField crush = new TextField("0");
     TextField saveFileName = new TextField();
-    CheckBox bounce = new CheckBox();
+    ComboBox<String> mode = new ComboBox<>(FXCollections.observableArrayList("reset", "bounce", "stretch", "stretch x2"));
     CheckBox showOffset = new CheckBox();
     Button load = new Button("Load");
     Button save = new Button("Save");
@@ -44,23 +43,21 @@ public class MainScreen
     ImageView logoView = new ImageView();
     ImageView logoGradient = new ImageView(CreateGraphics.createGradient(360, 210));
     ImageView controlGradient = new ImageView();
-    Slider multiplier = new Slider(1, 100, 1);
-    Slider offsetSlider = new Slider(0, 2, 0);
-    Slider crushSlider = new Slider(0, 1000, 0);
+    Slider multiplier = new Slider(0, 1, 1);
+    Slider offsetSlider = new Slider(0, 1, 0);
     ListView<String> suggest = new ListView<>();
     public MainScreen(Stage window)
     {
         this.window = window;
         logo = CreateGraphics.createLogo();
         logoView.setImage(logo);
-        window.setTitle("Multiplimiter: load sound");
+        window.setTitle("WaveShaper: load sound");
         window.setResizable(false);
         showOffset.setSelected(true);
-        bounce.selectedProperty().addListener(e-> changeValue());
         showOffset.selectedProperty().addListener(e-> changeValue());
+        mode.setValue("reset");
         offsetSlider.valueProperty().addListener(e-> changeValue());
         multiplier.valueProperty().addListener(e-> changeValue());
-        crushSlider.valueProperty().addListener(e-> changeValue());
         label.setLayoutX(10);
         label.setLayoutY(173);
         label.setFont(Font.font(Font.getDefault().toString(), FontWeight.BOLD, 14D));
@@ -71,6 +68,10 @@ public class MainScreen
         load.setPrefWidth(80);
         load.setLayoutX(260);
         load.setLayoutY(170);
+        mode.setOnAction(e-> {
+            waveForm = Processor.processWave(multiplier.getValue(), offsetSlider.getValue(), mode.getValue(), showOffset.isSelected());
+            waveFormView.setImage(waveForm);
+        });
         waveFormView.setImage(waveForm);
         suggest.setLayoutX(50);
         suggest.setLayoutY(170);
@@ -90,7 +91,7 @@ public class MainScreen
             }
             catch (NullPointerException ex)
             {
-                window.setTitle("Multiplimiter: load sound (loading failed!)");
+                window.setTitle("WaveShaper: load sound (loading failed!)");
             }
         });
         pane.getChildren().addAll(logoGradient, logoView, suggest, fileName, load, label);
@@ -103,7 +104,7 @@ public class MainScreen
             }
             catch (NullPointerException ex)
             {
-                window.setTitle("Multiplimiter: load sound (loading failed!)");
+                window.setTitle("WaveShaper: load sound (loading failed!)");
             }
         });
         fileName.setOnKeyPressed(e ->
@@ -117,13 +118,13 @@ public class MainScreen
                 }
                 catch (NullPointerException ex)
                 {
-                    window.setTitle("Multiplimiter: load sound (loading failed!)");
+                    window.setTitle("WaveShaper: load sound (loading failed!)");
                 }
             }
         });
 
         scene = new Scene(pane, 350, 200);
-        loadPane.getChildren().addAll(controlGradient, waveFormView, multiplier, multiLabel, offset, offsetSlider, saveFileName, save, bounceLabel, play, bounce, showOffset, showOffsetLabel, scale, newSound, crush, crushSlider);
+        loadPane.getChildren().addAll(controlGradient, waveFormView, multiplier, multiLabel, offset, offsetSlider, saveFileName, save, bounceLabel, play, mode, showOffset, showOffsetLabel, scale, newSound);
         audioScene = new Scene(loadPane, waveForm.getWidth() + 20, 366);
         window.setScene(scene);
         fileName.requestFocus();
@@ -131,13 +132,11 @@ public class MainScreen
 
     public void showSound()
     {
-        bounce.setSelected(false);
         offsetSlider.setValue(0);
         multiplier.setValue(1);
-        crushSlider.setValue(0);
         waveForm = Processor.loadFile(fileName.getText(), offsetSlider.getValue(), showOffset.isSelected());
         waveFormView.setImage(waveForm);
-        window.setTitle("Multiplimiter: "+fileName.getText());
+        window.setTitle("WaveShaper: "+fileName.getText());
         window.setWidth(waveForm.getWidth() + 26);
         controlGradient.setLayoutY(120);
         controlGradient.setImage(CreateGraphics.createGradient((int) waveForm.getWidth() + 26, 326));
@@ -148,7 +147,7 @@ public class MainScreen
         {
             window.setScene(scene);
             window.setWidth(356);
-            window.setTitle("Multiplimiter: load sound");
+            window.setTitle("WaveShaper: load sound");
         });
         play.setLayoutX(waveForm.getWidth() - 100);
         play.setLayoutY(220);
@@ -161,7 +160,7 @@ public class MainScreen
             }
             catch(Exception ex)
             {
-                window.setTitle("Multiplimiter: "+fileName.getText()+ "(playback failed!)");
+                window.setTitle("WaveShaper: "+fileName.getText()+ "(playback failed!)");
                 ex.printStackTrace();
             }
         });
@@ -176,11 +175,11 @@ public class MainScreen
                 {
                     Calendar now = Calendar.getInstance();
                     AudioLoader.saveAudioFile(Processor.sound, saveFileName.getText());
-                    window.setTitle("Multiplimiter: "+fileName.getText()+ " (\""+saveFileName.getText()+".wav\" save successful "+now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+")");
+                    window.setTitle("WaveShaper: "+fileName.getText()+ " (\""+saveFileName.getText()+".wav\" save successful "+now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+")");
                 }
                 catch (IOException ioe)
                 {
-                    window.setTitle("Multiplimiter: "+fileName.getText()+ " (saving failed!)");
+                    window.setTitle("WaveShaper: "+fileName.getText()+ " (saving failed!)");
                 }
             }
         });
@@ -196,20 +195,20 @@ public class MainScreen
             {
                 Calendar now = Calendar.getInstance();
                 AudioLoader.saveAudioFile(Processor.sound, saveFileName.getText());
-                window.setTitle("Multiplimiter: "+fileName.getText()+ " (\""+saveFileName.getText()+".wav\" save successful "+now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+")");
+                window.setTitle("WaveShaper: "+fileName.getText()+ " (\""+saveFileName.getText()+".wav\" save successful "+now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+")");
             }
             catch (IOException ioe)
             {
-                window.setTitle("Multiplimiter: "+fileName.getText()+ " (saving failed!)");
+                window.setTitle("WaveShaper: "+fileName.getText()+ " (saving failed!)");
             }
         });
         bounceLabel.setLayoutX(35);
         bounceLabel.setLayoutY(224);
-        bounce.setLayoutX(10);
-        bounce.setLayoutY(223);
-        showOffset.setLayoutX(110);
+        mode.setLayoutX(10);
+        mode.setLayoutY(220);
+        showOffset.setLayoutX(130);
         showOffset.setLayoutY(223);
-        showOffsetLabel.setLayoutX(135);
+        showOffsetLabel.setLayoutX(155);
         showOffsetLabel.setLayoutY(224);
         waveFormView.setLayoutX(10);
         waveFormView.setLayoutY(10);
@@ -217,10 +216,6 @@ public class MainScreen
         multiLabel.setLayoutY(250);
         multiLabel.setPrefWidth(100);
         multiLabel.setOnKeyPressed(this::changeSlider);
-        crush.setLayoutX(10);
-        crush.setLayoutY(330);
-        crush.setPrefWidth(100);
-        crush.setOnKeyPressed(this::changeSlider);
         offset.setLayoutX(10);
         offset.setLayoutY(290);
         offset.setPrefWidth(100);
@@ -231,9 +226,6 @@ public class MainScreen
         multiplier.setLayoutX(120);
         multiplier.setLayoutY(255);
         multiplier.setPrefWidth(waveForm.getWidth() - 110);
-        crushSlider.setLayoutX(120);
-        crushSlider.setLayoutY(335);
-        crushSlider.setPrefWidth(waveForm.getWidth() - 110);
         window.setScene(audioScene);
         audioScene.setOnKeyPressed(e->
         {
@@ -243,7 +235,7 @@ public class MainScreen
                 {
                     window.setScene(scene);
                     window.setWidth(356);
-                    window.setTitle("Multiplimiter: load sound");
+                    window.setTitle("WaveShaper: load sound");
                 }
                 if(e.getCode() == KeyCode.S)
                 {
@@ -251,11 +243,11 @@ public class MainScreen
                     {
                         Calendar now = Calendar.getInstance();
                         AudioLoader.saveAudioFile(Processor.sound, saveFileName.getText());
-                        window.setTitle("Multiplimiter: "+fileName.getText()+ " (\""+saveFileName.getText()+".wav\" save successful "+now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+")");
+                        window.setTitle("WaveShaper: "+fileName.getText()+ " (\""+saveFileName.getText()+".wav\" save successful "+now.get(Calendar.HOUR_OF_DAY)+":"+now.get(Calendar.MINUTE)+")");
                     }
                     catch (IOException ioe)
                     {
-                        window.setTitle("Multiplimiter: "+fileName.getText()+ " (saving failed!)");
+                        window.setTitle("WaveShaper: "+fileName.getText()+ " (saving failed!)");
                     }
                 }
             }
@@ -266,10 +258,10 @@ public class MainScreen
     {
         multiLabel.setText(""+multiplier.getValue());
         offset.setText(""+offsetSlider.getValue());
-        crush.setText(""+ (int) crushSlider.getValue());
-        waveForm = Processor.processWave(multiplier.getValue(), offsetSlider.getValue(), bounce.isSelected(), showOffset.isSelected(), (int) crushSlider.getValue());
+        waveForm = Processor.processWave(multiplier.getValue(), offsetSlider.getValue(), mode.getValue(), showOffset.isSelected());
         waveFormView.setImage(waveForm);
     }
+
     public void changeSlider(KeyEvent ke)
     {
         if(ke.getCode().equals(KeyCode.ENTER))
@@ -290,15 +282,7 @@ public class MainScreen
             {
                 offset.setText("Not a number");
             }
-            try
-            {
-                crushSlider.setValue((int) Double.parseDouble(crush.getText()));
-            }
-            catch(NumberFormatException e)
-            {
-                crush.setText("Not a number");
-            }
-            waveForm = Processor.processWave(multiplier.getValue(), offsetSlider.getValue(), bounce.isSelected(), showOffset.isSelected(), (int) crushSlider.getValue());
+            waveForm = Processor.processWave(multiplier.getValue(), offsetSlider.getValue(), mode.getValue(), showOffset.isSelected());
             waveFormView.setImage(waveForm);
         }
     }
@@ -334,7 +318,7 @@ public class MainScreen
             suggest.setLayoutY(300);
             suggest.setPrefHeight(0);
         }
-        window.setTitle("Multiplimiter: load sound");
+        window.setTitle("WaveShaper: load sound");
         if(e.isControlDown() && e.getCode().isDigitKey())
         {
             int i = Integer.parseInt(e.getText());
@@ -352,7 +336,7 @@ public class MainScreen
                     showSound();
                 } catch (NullPointerException ex)
                 {
-                    window.setTitle("Multiplimiter: load sound (loading failed!)");
+                    window.setTitle("WaveShaper: load sound (loading failed!)");
                 }
             }
         }

@@ -9,6 +9,7 @@ public class Run extends Application
     }
     public void start(Stage window) throws Exception
     {
+
         MainScreen mainScreen = new MainScreen(window);
         window.show();
     }

@@ -12,7 +12,7 @@ public class AudioLoader
 
         for(int i = 0; i < dataLength / 4; i++)
         {
-            result[i] = ((short) (((data[4*i+1] & 0xFF) << 8) + (data[4*i] & 0xFF))) / ((double) Short.MAX_VALUE);
+            result[i] = ((short) (((data[4*i+1] & 0xFF) << 8) | (data[4*i] & 0xFF))) / ((double) Short.MAX_VALUE);
         }
         return result;
     }
@@ -40,7 +40,6 @@ public class AudioLoader
         }
         return data;
     }
-
 
     public static void saveAudioFile(double[] sound, String name) throws IOException
     {

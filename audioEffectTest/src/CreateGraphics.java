@@ -13,7 +13,7 @@ public class CreateGraphics
         return scale;
     }
 
-    public static WritableImage generateWaveForm(double[] waveData, double offset, boolean showOffset)
+    public static WritableImage generateWaveForm(double[] waveData, double offset, boolean showOffset, String mode)
     {
         long size = waveData.length;
         scale = 1;
@@ -31,7 +31,7 @@ public class CreateGraphics
             {
                 for(int y = 0; y < waveData[i] * 100; y++)
                 {
-                    pi.setColor(counter, y + 100, Color.color(1, (double) y / 100, 0));
+                    pi.setColor(counter, y + 100, Color.color(1, (double) y / 200 + 0.5, 0));
                 }
             }
             if(waveData[i] <= 0)
@@ -39,7 +39,7 @@ public class CreateGraphics
                 pi.setColor(counter, 100, Color.color(1, 0, 0));
                 for(int y = 0; y > waveData[i] * 100; y--)
                 {
-                    pi.setColor(counter, y + 100, Color.color(1, (double) -y / 100, 0));
+                    pi.setColor(counter, y + 100, Color.color(1, (double) -y / 200 + 0.5, 0));
                 }
             }
 
@@ -47,12 +47,34 @@ public class CreateGraphics
         }
         if(showOffset == true)
         {
-            for(int i = 0; i < wi.getWidth(); i++)
+            if(mode.equals("reset") || mode.equals("bounce"))
             {
-                pi.setColor(i, 199, Color.color(0, 1, 0));
-                pi.setColor(i, limit((int) (199 - offset * 100)), Color.color(0, 1, 0));
-                pi.setColor(i, 0, Color.color(0, 0, 1));
-                pi.setColor(i, limit((int) (offset * 100)), Color.color(0, 0, 1));
+                for (int i = 0; i < wi.getWidth(); i++)
+                {
+                    pi.setColor(i, 199, Color.color(0, 1, 0));
+                    pi.setColor(i, limit((int) (199 - offset * 100)), Color.color(0, 1, 0));
+                    pi.setColor(i, 0, Color.color(0, 0, 1));
+                    pi.setColor(i, limit((int) (offset * 100)), Color.color(0, 0, 1));
+                }
+            }
+            if(mode.equals("stretch x2"))
+            {
+                for (int i = 0; i < wi.getWidth(); i++)
+                {
+                    pi.setColor(i, 199, Color.color(0, 1, 0));
+                    pi.setColor(i, limit((int) (100 -offset * 100)), Color.color(0, 0, 1));
+                    pi.setColor(i, 0, Color.color(0, 0, 1));
+                    pi.setColor(i, limit((int) (100 + offset * 100)), Color.color(0, 1, 0));
+                }
+            }
+            if(mode.equals("stretch"))
+            {
+                for (int i = 0; i < wi.getWidth(); i++)
+                {
+                    pi.setColor(i, 199, Color.color(0, 1, 0));
+                    pi.setColor(i, limit((int) (offset * 200)), Color.color(0, 0.5, 0.5));
+                    pi.setColor(i, 0, Color.color(0, 0, 1));
+                }
             }
         }
         return wi;

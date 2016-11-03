@@ -18,20 +18,27 @@ public class Processor
         {
             sound[i] = originalSound[i];
         }
-        waveForm = CreateGraphics.generateWaveForm(originalSound, offset, showOffset);
+        waveForm = CreateGraphics.generateWaveForm(originalSound, offset, showOffset, "reset");
         return waveForm;
     }
 
-    public static WritableImage processWave(double multiplier, double offset, boolean bounce, boolean showOffset, int skip)
+    public static WritableImage processWave(double multiplier, double offset, String mode, boolean showOffset)
     {
         sound = new double[originalSound.length];
+        if(mode.equals("reset") || mode.equals("bounce"))
+        {
+            multiplier = multiplier * 99 + 1;
+            offset = offset * 2;
+        }
         for(int i = 0; i < originalSound.length; i++)
         {
-            sound[i] = originalSound[i] * multiplier;
             if(offset > 0)
             {
-                if(bounce == false)
+                if(mode.equals("reset"))
                 {
+                    sound[i] = originalSound[i] * multiplier;
+                    System.out.println(offset);
+                    System.out.println(multiplier);
                     if (sound[i] > 1)
                     {
                         double temp = sound[i] - 1;
@@ -46,8 +53,9 @@ public class Processor
                         sound[i] = sound[i] + offset * (count + 1);
                     }
                 }
-                if(bounce == true)
+                if(mode.equals("bounce"))
                 {
+                    sound[i] = originalSound[i] * multiplier;
                     if (sound[i] > 1)
                     {
                         double temp = sound[i] - 1;
@@ -79,8 +87,17 @@ public class Processor
                     }
                 }
             }
-            if(offset <= 0)
+            if(mode.equals("stretch"))
             {
+                sound[i] = originalSound[i];
+                if(sound[i] < Math.sin(sound[i] * 100 * multiplier) * offset || sound[i] > -Math.sin(sound[i] * 100 * multiplier) * offset)
+                {
+                    sound[i] = -sound[i];
+                }
+                else
+                {
+
+                }
                 if(sound[i] > 1)
                 {
                     sound[i] = 1;
@@ -90,18 +107,74 @@ public class Processor
                     sound[i] = -1;
                 }
             }
-            int crush = (int) Math.abs(((double) skip));
-
-            if(crush > 0 && skip > 0)
+            if(mode.equals("stretch x2"))
             {
-                for (int j = 0; j < crush && i + j < originalSound.length; j++)
+                sound[i] = originalSound[i];
+                sound[i] = sound[i] * multiplier * 100;
+
+
+
+                for(int j = 0; j < 100; j++)
                 {
-                    sound[i + j] = sound[i];
+                    if (sound[i] < -offset)
+                    {
+                        sound[i] = -sound[i] - 1;
+                    }
+
+                    if (sound[i] > offset)
+                    {
+                        sound[i] = -sound[i] + 1;
+                    }
                 }
-                i = i + crush - 1;
+
+
+                if(sound[i] > 1)
+                {
+                    sound[i] = 1;
+                }
+                if(sound[i] < -1)
+                {
+                    sound[i] = -1;
+                }
+
+
+                /* deprecated
+                sound[i] = originalSound[i];
+                if (Math.abs(sound[i]) < Math.abs(multiplier))
+                {
+                    double temp = sound[i] / multiplier;
+                    sound[i] = temp * offset;
+                }
+                else
+                {
+                    if(sound[i] > 0)
+                    {
+                        double temp = sound[i] - multiplier;
+                        temp = (temp / (1 - multiplier)) * (1 - offset);
+                        sound[i] = temp + offset;
+                    }
+                    if (sound[i] < 0)
+                    {
+                        double temp = - sound[i] - multiplier;
+                        temp = (temp / (1 - multiplier)) * (1 - offset);
+                        sound[i] = -(temp + offset);
+                    }
+                }*/
+            }
+            if(offset <= 0 && !mode.equals("stretch") && !mode.equals("stretch x2"))
+            {
+                sound[i] = originalSound[i] * multiplier;
+                if(sound[i] > 1)
+                {
+                    sound[i] = 1;
+                }
+                if(sound[i] < -1)
+                {
+                    sound[i] = -1;
+                }
             }
         }
-        waveForm = CreateGraphics.generateWaveForm(sound, offset, showOffset);
+        waveForm = CreateGraphics.generateWaveForm(sound, offset, showOffset, mode);
         return waveForm;
     }
 
